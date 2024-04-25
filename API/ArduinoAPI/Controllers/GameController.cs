@@ -86,7 +86,7 @@ namespace API.Controllers
 
         // DELETE: api/Games/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteGame(int id)
         {
             var game = await _context.Games.FindAsync(id);
             if (game == null)
