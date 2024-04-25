@@ -84,9 +84,9 @@ namespace API.Controllers
             return CreatedAtAction("GetGame", new { id = game.Id }, game);
         }
         
-        // POST: api/Games
+        // POST: api/Games/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("{curNum}")]
         public async Task<ActionResult<Game>> PostGame(int curNum, Game game)
         {
             game.answerStreak = curNum; // Set the answer streak
