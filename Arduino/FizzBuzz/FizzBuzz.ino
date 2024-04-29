@@ -131,6 +131,8 @@ void loop() {
 
   wifiCheckTimer++;
 }
+
+// --- WiFi helper functions --- //
 void printWifiData() {
   IPAddress ip = WiFi.localIP();
 
@@ -188,6 +190,47 @@ void printMacAddress(byte mac[]) {
   Serial.println();
 }
 
+// --- API functions --- //
+void sendGameResult() {
+  if(WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi not connected. Cannot send game result.");
+    return;
+  }
+
+  const char* server = "https://fizzbuzzarduino.onrender.com";
+  const int port = 80;
+  const char* endpoint = "/api/GameController/CreateGame";
+
+  int score = curNum;
+
+  WiFiClient client;
+
+  if(!client.connect(server, port)) {
+    Serial.println("Connection to server failed");
+    return;
+  }
+
+  client.print(String("POST ") + endpoint + " HTTP/1.1\r\n");
+  client.print("Host: ");
+  client.println(server);
+  client.println("Content-Type: application/x-www-form-urlencoded");
+  client.print("Content-Length: ");
+  client.println(sizeof(score));
+  client.println("Connection: close");
+  client.println("");
+  client.println(score);
+
+  while (client.connected()) {
+    if(client.available()) {
+      char c = client.read();
+      Serial.print(c);
+    }
+  }
+
+  client.stop();
+}
+
+// --- Game functions --- //
 void correctAnswerMessage(String message) {
   ledCircle(0x008000, 1);
   carrier.display.fillScreen(ST77XX_GREEN);
@@ -213,7 +256,10 @@ void wrongAnswer() {
   carrier.display.fillScreen(ST77XX_RED);
   carrier.display.setCursor(40, 110);
   carrier.display.println("Game over");
-  Serial.println("Game over");    
+  Serial.println("Game over");
+
+  sendGameResult();
+
   curNum = 1;
 
   resetScreen();

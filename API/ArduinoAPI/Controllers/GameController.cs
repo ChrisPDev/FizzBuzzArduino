@@ -23,7 +23,7 @@ namespace API.Controllers
 
         // GET: api/Games
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Game>>> GetGame()
+        public async Task<ActionResult<IEnumerable<Game>>> GetGames()
         {
             return await _context.Games.ToListAsync();
         }
@@ -42,10 +42,19 @@ namespace API.Controllers
             return game;
         }
 
+        // POST: api/Games
+        [HttpPost]
+        public async Task<ActionResult<Game>> CreateGame(Game game)
+        {
+            _context.Games.Add(game);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetGame", new { id = game.Id }, game);
+        }
+
         // PUT: api/Games/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutGame(int id, Game game)
+        public async Task<IActionResult> UpdateGame(int id, Game game)
         {
             if (id != game.Id)
             {
@@ -71,17 +80,6 @@ namespace API.Controllers
             }
 
             return NoContent();
-        }
-
-        // POST: api/Games
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Game>> PostGame(Game game)
-        {
-            _context.Games.Add(game);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetGame", new { id = game.Id }, game);
         }
 
         // DELETE: api/Games/5
