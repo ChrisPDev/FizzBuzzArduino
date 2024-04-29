@@ -21,15 +21,15 @@ namespace API.Controllers
             _context = context;
         }
 
-        // GET: api/GetGame
-        [HttpGet("GetGame")]
+        // GET: api/Games
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<Game>>> GetGame()
         {
             return await _context.Games.ToListAsync();
         }
 
-        // GET: api/GetGame/5
-        [HttpGet("GetGame/{id}")]
+        // GET: api/Games/5
+        [HttpGet("{id}")]
         public async Task<ActionResult<Game>> GetGame(int id)
         {
             var game = await _context.Games.FindAsync(id);
@@ -42,8 +42,9 @@ namespace API.Controllers
             return game;
         }
 
-        // PUT: api/PutGame/5
-        [HttpPut("PutGame/{id}")]
+        // PUT: api/Games/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
         public async Task<IActionResult> PutGame(int id, Game game)
         {
             if (id != game.Id)
@@ -72,8 +73,9 @@ namespace API.Controllers
             return NoContent();
         }
 
-        // POST: api/PostGame
-        [HttpPost("PostGame")]
+        // POST: api/Games
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
         public async Task<ActionResult<Game>> PostGame(Game game)
         {
             _context.Games.Add(game);
@@ -82,21 +84,8 @@ namespace API.Controllers
             return CreatedAtAction("GetGame", new { id = game.Id }, game);
         }
 
-        // POST: api/PostGame/5
-        [HttpPost("PostGame/{answerStreak}")]
-        public async Task<ActionResult<Game>> PostGame(int answerStreak, Game game)
-        {
-            game.answerStreak = answerStreak; // Set the answer streak
-
-            _context.Games.Add(game);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetGame", new { id = game.Id }, game);
-        }
-
-
-        // DELETE: api/DeleteGame/5
-        [HttpDelete("DeleteGame/{id}")]
+        // DELETE: api/Games/5
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGame(int id)
         {
             var game = await _context.Games.FindAsync(id);
