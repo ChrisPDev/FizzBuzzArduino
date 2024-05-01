@@ -202,8 +202,8 @@ void printMacAddress(byte mac[]) {
 // --- API functions --- //
 void sendPostRequest(int curNum) {
     // Create a JSON payload
-    StaticJsonDocument<200> doc;
-    doc["curNum"] = curNum;
+    DynamicJsonDocument doc(1024);
+    doc["answerStreak"] = curNum;
 
     // Serialize JSON to string
     String payload;
@@ -220,6 +220,17 @@ void sendPostRequest(int curNum) {
 
     // Print some debug info if needed
     Serial.println("POST request sent");
+
+    
+
+    int statusCode = client.responseStatusCode();
+    String response = client.responseBody();
+    //makes a json object
+    Serial.print("HTTP Response Code: ");
+    Serial.println(statusCode);
+    Serial.print("Response Body: ");
+    Serial.println(response);
+    Serial.println();
 }
 
 
