@@ -46,8 +46,8 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<Game>> CreateGame(Game game)
         {
-            game.CreatedAt = DateTime.UtcNow;
-            game.UpdatedAt = DateTime.UtcNow;
+            game.CreatedAt = DateTime.UtcNow.ToLocalTime();
+            game.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
 
