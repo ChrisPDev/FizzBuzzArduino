@@ -47,8 +47,8 @@ namespace API.Controllers
         public async Task<ActionResult<Game>> CreateGame(Game game)
         {
             // Test at ToLocalTime()
-            game.CreatedAt = DateTime.UtcNow.ToLocalTime();
-            game.UpdatedAt = DateTime.UtcNow.ToLocalTime();
+            game.CreatedAt = DateTime.UtcNow.AddHours(2);
+            game.UpdatedAt = DateTime.UtcNow.AddHours(2);
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
 
