@@ -2,6 +2,8 @@
 #include <bsec.h>
 #include <SPI.h>
 #include <WiFiNINA.h>
+#include <ArduinoHttpClient.h>
+#include <ArduinoJson.h>
 #include <SD.h>
 //#include "ardino_secrets.h"
 
@@ -9,6 +11,13 @@ MKRIoTCarrier carrier;
 
 char ssid[] = "ChristofferHotspot";
 char pass[] = "Doomreaver021292!";
+
+const int serverPort = 443;
+const char* endPoint = "/api/Game";
+const char* serverAddress = "fizzbuzzarduino.onrender.com";
+
+WiFiSSLClient wifi;
+HttpClient client = HttpClient(wifi, serverAddress, serverPort);
 
 int status = WL_IDLE_STATUS;
 
@@ -191,44 +200,28 @@ void printMacAddress(byte mac[]) {
 }
 
 // --- API functions --- //
-void sendGameResult() {
-  if(WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi not connected. Cannot send game result.");
-    return;
-  }
+void sendPostRequest(int curNum) {
+    // Create a JSON payload
+    StaticJsonDocument<200> doc;
+    doc["curNum"] = curNum;
 
-  const char* server = "https://fizzbuzzarduino.onrender.com";
-  const int port = 80;
-  const char* endpoint = "/api/GameController/CreateGame";
+    // Serialize JSON to string
+    String payload;
+    serializeJson(doc, payload);
 
-  int score = curNum;
+    // Send POST request
+    Serial.println("Sending POST request");
+    client.beginRequest();
+    client.post(endPoint);
+    client.sendHeader("Content-Type", "application/json");
+    client.sendHeader("Content-Length", payload.length());
+    client.endRequest();
+    client.print(payload);
 
-  WiFiClient client;
-
-  if(!client.connect(server, port)) {
-    Serial.println("Connection to server failed");
-    return;
-  }
-
-  client.print(String("POST ") + endpoint + " HTTP/1.1\r\n");
-  client.print("Host: ");
-  client.println(server);
-  client.println("Content-Type: application/x-www-form-urlencoded");
-  client.print("Content-Length: ");
-  client.println(sizeof(score));
-  client.println("Connection: close");
-  client.println("");
-  client.println(score);
-
-  while (client.connected()) {
-    if(client.available()) {
-      char c = client.read();
-      Serial.print(c);
-    }
-  }
-
-  client.stop();
+    // Print some debug info if needed
+    Serial.println("POST request sent");
 }
+
 
 // --- Game functions --- //
 void correctAnswerMessage(String message) {
@@ -258,7 +251,7 @@ void wrongAnswer() {
   carrier.display.println("Game over");
   Serial.println("Game over");
 
-  sendGameResult();
+  sendPostRequest(curNum);
 
   curNum = 1;
 
