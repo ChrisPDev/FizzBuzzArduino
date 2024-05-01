@@ -46,6 +46,7 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<Game>> CreateGame(Game game)
         {
+            // Test at ToLocalTime()
             game.CreatedAt = DateTime.UtcNow.ToLocalTime();
             game.UpdatedAt = DateTime.UtcNow.ToLocalTime();
             _context.Games.Add(game);
