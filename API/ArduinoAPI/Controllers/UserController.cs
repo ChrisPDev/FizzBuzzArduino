@@ -42,6 +42,20 @@ namespace API.Controllers
             return user;
         }
 
+        // GET: api/User/username/{username}
+        [HttpGet("username/{username}")]
+        public async Task<ActionResult<User>> GetUserByUsername(string username)
+        {
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.username == username);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return user;
+        }
+
         // POST: api/User
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser(User user)
