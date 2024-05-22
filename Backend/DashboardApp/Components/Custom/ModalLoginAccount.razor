@@ -9,14 +9,15 @@
 
 <h3>Modal Login Account</h3>
 
-<p>Create an account, to watch the FizzBuzz leaderboard</p>
+<p>Log on your account, to manage the FizzBuzz leaderboard</p>
 
-<p id="StatusMsg" @ref="statusMsg"></p>
-<p id="ApiStatusMsg" @ref="apiStatusMsg"></p>
+<p id="StatusMsg" @ref="statusMsgLogin"></p>
+<p id="ApiStatusMsg" @ref="apiStatusMsgLogin"></p>
+<p id="ValidateStatusMsg" @ref="validateStatusMsgLogin"></p>
 
-<input id="UNameCreate" type="text" placeholder="Username" @bind="username" required />
-<input id="PWordCreate" type="password" placeholder="Password" @bind="password" required />
-<input id="SubmitCreate" type="button" value="Login" @onclick="CreateAccount" />
+<input id="UNameLogin" type="text" placeholder="Username" @bind="username" required />
+<input id="PWordLogin" type="password" placeholder="Password" @bind="password" required />
+<input id="SubmitLogin" type="button" value="Login" @onclick="LoginAccount" />
 
 <script>
     window.setElementText = (element, text) => {
@@ -27,19 +28,31 @@
 @code {
     private string username { get; set; }
     private string password { get; set; }
-    private ElementReference statusMsg;
-    private ElementReference apiStatusMsg;
+    private ElementReference statusMsgLogin;
+    private ElementReference apiStatusMsgLogin;
+    private ElementReference validateStatusMsgLogin;
 
     [Inject]
     IJSRuntime JS { get; set; }
 
-    private async Task CreateAccount()
+    private async Task LoginAccount()
     {
         if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
         {
-            // Add login functionality
+            User user = await GetUserByUsernameAsync(username);
 
-            await JS.InvokeVoidAsync("setElementText", statusMsg, "Logged on successfully!");
+            byte[] salt = Convert.FromBase64String(user.Salt);
+            string dbUserPass = user.HashPass;
+            string inputUserPass = HashPassword(password, salt);
+
+            if(inputUserPass == dbUserPass)
+            {
+                await JS.InvokeVoidAsync("setElementText", statusMsgLogin, "Logged on successfully!");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("setElementText", statusMsgLogin, "Failed to login!");
+            }
 
             username = string.Empty;
             password = string.Empty;
@@ -48,11 +61,21 @@
         }
         else
         {
-            await JS.InvokeVoidAsync("setElementText", statusMsg, "Please fill in all fields.");
+            await JS.InvokeVoidAsync("setElementText", statusMsgLogin, "Please fill in all fields.");
         }
     }
 
-    
+    public async Task<User> GetUserByUsernameAsync(string username)
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            var response = await client.GetAsync($"https://fizzbuzzarduino.onrender.com/api/User/username/{username}");
+            response.EnsureSuccessStatusCode();
+
+            await JS.InvokeVoidAsync("setElementText", apiStatusMsgLogin, response.IsSuccessStatusCode.ToString());
+            return await response.Content.ReadFromJsonAsync<User>();
+        }
+    }    
 
     private static string HashPassword(string password, byte[] salt)
     {

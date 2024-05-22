@@ -60,7 +60,6 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser(User user)
         {
-            // Test at ToLocalTime()
             user.CreatedAt = DateTime.UtcNow.AddHours(2);
             user.UpdatedAt = DateTime.UtcNow.AddHours(2);
             _context.Users.Add(user);
@@ -69,16 +68,29 @@ namespace API.Controllers
             return CreatedAtAction("GetUser", new { id = user.Id }, user);
         }
 
-        // PUT: api/User/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, User user)
+        // PUT: api/User/username/{username}
+        [HttpPut("username/{username}")]
+        public async Task<IActionResult> UpdateUserByUsername(string username, User user)
         {
-            if (id != user.Id)
+            var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.username == username);
+
+            if (existingUser == null)
+            {
+                return NotFound();
+            }
+
+            if (existingUser.Id != user.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(user).State = EntityState.Modified;
+            // Update the existing user with new values
+            existingUser.hashPass = user.hashPass;
+            existingUser.salt = user.salt;
+            existingUser.UpdatedAt = DateTime.UtcNow.AddHours(2);
+            // Update other properties as needed
+
+            _context.Entry(existingUser).State = EntityState.Modified;
 
             try
             {
@@ -86,7 +98,7 @@ namespace API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!UserExists(id))
+                if (!UserExists(existingUser.Id))
                 {
                     return NotFound();
                 }
@@ -99,11 +111,12 @@ namespace API.Controllers
             return NoContent();
         }
 
-        // DELETE: api/User/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        // DELETE: api/User/username/{username}
+        [HttpDelete("username/{username}")]
+        public async Task<IActionResult> DeleteUserByUsername(string username)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.username == username);
+
             if (user == null)
             {
                 return NotFound();

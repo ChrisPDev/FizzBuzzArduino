@@ -1,5 +1,93 @@
-﻿<h3>ModalForgotAccount</h3>
+﻿@using System.Net.Http;
+@using System.Net.Http.Json;
+@using System.Text.Json;
+@using System.Text.Json.Serialization;
+@using System;
+@using System.Collections.Generic;
+@using System.Threading.Tasks;
+@using System.Security.Cryptography
+
+<h3>Modal Forgot Account</h3>
+
+<p>Enter a new password, override your old password</p>
+
+<p id="StatusMsg" @ref="statusMsgForgot"></p>
+<p id="ApiStatusMsg" @ref="apiStatusMsgForgot"></p>
+
+<input id="UNameForgot" type="text" placeholder="Username" @bind="username" required />
+<input id="PWordForgot" type="password" placeholder="Password" @bind="password" required />
+<input id="SubmitForgot" type="button" value="Login" @onclick="LoginAccount" />
+
+<script>
+    window.setElementText = (element, text) => {
+        element.innerText = text;
+    };
+</script>
 
 @code {
+    private string username { get; set; }
+    private string password { get; set; }
+    private ElementReference statusMsgForgot;
+    private ElementReference apiStatusMsgForgot;
 
+    [Inject]
+    IJSRuntime JS { get; set; }
+
+    private async Task LoginAccount()
+    {
+        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+        {
+            await JS.InvokeVoidAsync("setElementText", statusMsgForgot, "Your password is changed!");
+
+            username = string.Empty;
+            password = string.Empty;
+
+            StateHasChanged();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("setElementText", statusMsgForgot, "Please fill in all fields.");
+        }
+    }
+
+    public async Task<User> GetUserByUsernameAsync(string username)
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            var response = await client.GetAsync($"https://fizzbuzzarduino.onrender.com/api/User/username/{username}");
+            response.EnsureSuccessStatusCode();
+
+            await JS.InvokeVoidAsync("setElementText", apiStatusMsgForgot, response.IsSuccessStatusCode.ToString());
+            return await response.Content.ReadFromJsonAsync<User>();
+        }
+    }
+
+
+    private static string HashPassword(string password, byte[] salt)
+    {
+        using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256))
+        {
+            byte[] hashBytes = pbkdf2.GetBytes(32);
+            return Convert.ToBase64String(hashBytes);
+        }
+    }
+
+    private static byte[] GenerateSalt()
+    {
+        byte[] salt = new byte[16];
+
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(salt);
+        }
+
+        return salt;
+    }
+
+    public class User
+    {
+        public string Username { get; set; }
+        public string HashPass { get; set; }
+        public string Salt { get; set; }
+    }
 }

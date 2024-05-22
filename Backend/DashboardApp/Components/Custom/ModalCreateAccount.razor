@@ -11,8 +11,8 @@
 
 <p>Create an account, to watch the FizzBuzz leaderboard</p>
 
-<p id="StatusMsg" @ref="statusMsg"></p>
-<p id="ApiStatusMsg" @ref="apiStatusMsg"></p>
+<p id="StatusMsg" @ref="statusMsgCreate"></p>
+<p id="ApiStatusMsg" @ref="apiStatusMsgCreate"></p>
 
 <input id="UNameCreate" type="text" placeholder="Username" @bind="username" required />
 <input id="PWordCreate" type="password" placeholder="Password" @bind="password" required />
@@ -27,8 +27,8 @@
 @code {
     private string username { get; set; }
     private string password { get; set; }
-    private ElementReference statusMsg;
-    private ElementReference apiStatusMsg;
+    private ElementReference statusMsgCreate;
+    private ElementReference apiStatusMsgCreate;
 
     [Inject]
     IJSRuntime JS { get; set; }
@@ -43,7 +43,7 @@
 
             CreateUserAsync(username, hashPass, saltString);
 
-            await JS.InvokeVoidAsync("setElementText", statusMsg, "Account created successfully!");
+            await JS.InvokeVoidAsync("setElementText", statusMsgCreate, "Account created successfully!");
 
             username = string.Empty;
             password = string.Empty;
@@ -52,7 +52,7 @@
         }
         else
         {
-            await JS.InvokeVoidAsync("setElementText", statusMsg, "Please fill in all fields.");
+            await JS.InvokeVoidAsync("setElementText", statusMsgCreate, "Please fill in all fields.");
         }
     }
 
@@ -68,7 +68,7 @@
             };
 
             var response = await client.PostAsJsonAsync("https://fizzbuzzarduino.onrender.com/api/User", newUser);
-            await JS.InvokeVoidAsync("setElementText", apiStatusMsg, response.IsSuccessStatusCode.ToString());
+            await JS.InvokeVoidAsync("setElementText", apiStatusMsgCreate, response.IsSuccessStatusCode.ToString());
             return response.IsSuccessStatusCode;
         }
     }
@@ -81,6 +81,7 @@
             return Convert.ToBase64String(hashBytes);
         }
     }
+
     private static byte[] GenerateSalt()
     {
         byte[] salt = new byte[16];
