@@ -7,13 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ArduinoAPI.Data;
 using ArduinoAPI.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Cryptography;
-using Microsoft.Extensions.Configuration;
-using System.Configuration;
 
 namespace API.Controllers
 {
@@ -22,12 +15,10 @@ namespace API.Controllers
     public class UserController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;
 
-        public UserController(ApplicationDbContext context, IConfiguration configuration)
+        public UserController(ApplicationDbContext context)
         {
             _context = context;
-            _configuration = configuration;
         }
 
         // GET: api/User
@@ -135,59 +126,6 @@ namespace API.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.Id == id);
-        }
-
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel login)
-        {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.username == login.Username);
-
-            if (user == null)
-            {
-                return Unauthorized("Invalid username or password.");
-            }
-
-            var hashPass = HashPassword(login.Password, Convert.FromBase64String(user.salt));
-
-            if (user.hashPass != hashPass)
-            {
-                return Unauthorized("Invalid username or password.");
-            }
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:SecretKey"]);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-            new Claim(ClaimTypes.Name, user.username)
-                }),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            return Ok(new { Token = tokenString });
-        }
-
-        private static string HashPassword(string password, byte[] salt)
-        {
-            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256))
-            {
-                byte[] hashBytes = pbkdf2.GetBytes(32);
-                return Convert.ToBase64String(hashBytes);
-            }
-        }
-
-        private static byte[] GenerateSalt()
-        {
-            byte[] salt = new byte[16];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-            return salt;
         }
     }
 }
