@@ -16,7 +16,7 @@
 
 <input id="UNameForgot" type="text" placeholder="Username" @bind="username" required />
 <input id="PWordForgot" type="password" placeholder="Password" @bind="password" required />
-<input id="SubmitForgot" type="button" value="Login" @onclick="LoginAccount" />
+<input id="SubmitForgot" type="button" value="Update" @onclick="ForgotAccount" />
 
 <script>
     window.setElementText = (element, text) => {
@@ -33,11 +33,24 @@
     [Inject]
     IJSRuntime JS { get; set; }
 
-    private async Task LoginAccount()
+    private async Task ForgotAccount()
     {
         if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
         {
-            await JS.InvokeVoidAsync("setElementText", statusMsgForgot, "Your password is changed!");
+            byte[] salt = GenerateSalt();
+            string saltString = Convert.ToBase64String(salt);
+            string hashPass = HashPassword(password, salt);
+
+            bool status = await UpdateUserByUsernameAsync(username, hashPass, saltString);
+
+            if (status == true)
+            {
+                await JS.InvokeVoidAsync("setElementText", statusMsgForgot, "Your password is changed!");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("setElementText", statusMsgForgot, "Password change failed due to API related error!");
+            }
 
             username = string.Empty;
             password = string.Empty;
@@ -50,18 +63,20 @@
         }
     }
 
-    public async Task<User> GetUserByUsernameAsync(string username)
+    public async Task<bool> UpdateUserByUsernameAsync(string username, string hashPass, string salt)
     {
         using (HttpClient client = new HttpClient())
         {
-            var response = await client.GetAsync($"https://fizzbuzzarduino.onrender.com/api/User/username/{username}");
-            response.EnsureSuccessStatusCode();
+            var updatedUser = new User
+            {
+                HashPass = hashPass,
+                Salt = salt
+            };
 
-            await JS.InvokeVoidAsync("setElementText", apiStatusMsgForgot, response.IsSuccessStatusCode.ToString());
-            return await response.Content.ReadFromJsonAsync<User>();
+            var response = await client.PutAsJsonAsync($"https://fizzbuzzarduino.onrender.com/api/User/username/{username}", updatedUser);
+            return response.IsSuccessStatusCode;
         }
     }
-
 
     private static string HashPassword(string password, byte[] salt)
     {

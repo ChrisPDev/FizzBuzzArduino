@@ -41,9 +41,16 @@
             string saltString = Convert.ToBase64String(salt);
             string hashPass = HashPassword(password, salt);
 
-            CreateUserAsync(username, hashPass, saltString);
+            bool status = await CreateUserAsync(username, hashPass, saltString);
 
-            await JS.InvokeVoidAsync("setElementText", statusMsgCreate, "Account created successfully!");
+            if(status == true)
+            {
+                await JS.InvokeVoidAsync("setElementText", statusMsgCreate, "Account created successfully!");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("setElementText", statusMsgCreate, "Account creation failed due to API related error!");
+            }
 
             username = string.Empty;
             password = string.Empty;

@@ -45,13 +45,20 @@
             string dbUserPass = user.HashPass;
             string inputUserPass = HashPassword(password, salt);
 
-            if(inputUserPass == dbUserPass)
+            if (user != null)
             {
-                await JS.InvokeVoidAsync("setElementText", statusMsgLogin, "Logged on successfully!");
+                if (inputUserPass == dbUserPass)
+                {
+                    await JS.InvokeVoidAsync("setElementText", statusMsgLogin, "Logged on successfully!");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("setElementText", statusMsgLogin, "Failed to login!");
+                }
             }
             else
             {
-                await JS.InvokeVoidAsync("setElementText", statusMsgLogin, "Failed to login!");
+                await JS.InvokeVoidAsync("setElementText", statusMsgLogin, "Login failed due to API related error!");
             }
 
             username = string.Empty;
