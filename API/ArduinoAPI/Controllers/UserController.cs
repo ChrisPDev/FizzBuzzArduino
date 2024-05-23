@@ -79,16 +79,10 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            if (existingUser.Id != user.Id)
-            {
-                return BadRequest();
-            }
-
             // Update the existing user with new values
             existingUser.hashPass = user.hashPass;
             existingUser.salt = user.salt;
             existingUser.UpdatedAt = DateTime.UtcNow.AddHours(2);
-            // Update other properties as needed
 
             _context.Entry(existingUser).State = EntityState.Modified;
 
@@ -110,6 +104,7 @@ namespace API.Controllers
 
             return NoContent();
         }
+
 
         // DELETE: api/User/username/{username}
         [HttpDelete("username/{username}")]

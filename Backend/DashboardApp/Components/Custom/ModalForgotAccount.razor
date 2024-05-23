@@ -5,7 +5,7 @@
 @using System;
 @using System.Collections.Generic;
 @using System.Threading.Tasks;
-@using System.Security.Cryptography
+@using System.Security.Cryptography;
 
 <h3>Modal Forgot Account</h3>
 
@@ -32,6 +32,8 @@
 
     [Inject]
     IJSRuntime JS { get; set; }
+    [Inject]
+    HttpClient Http { get; set; }
 
     private async Task ForgotAccount()
     {
@@ -43,7 +45,7 @@
 
             bool status = await UpdateUserByUsernameAsync(username, hashPass, saltString);
 
-            if (status == true)
+            if (status)
             {
                 await JS.InvokeVoidAsync("setElementText", statusMsgForgot, "Your password is changed!");
             }
@@ -68,10 +70,11 @@
         using (HttpClient client = new HttpClient())
         {
             var updatedUser = new User
-            {
-                HashPass = hashPass,
-                Salt = salt
-            };
+                {
+                    Username = username, // Ensure Username is part of the User object
+                    HashPass = hashPass,
+                    Salt = salt
+                };
 
             var response = await client.PutAsJsonAsync($"https://fizzbuzzarduino.onrender.com/api/User/username/{username}", updatedUser);
             return response.IsSuccessStatusCode;
@@ -90,12 +93,10 @@
     private static byte[] GenerateSalt()
     {
         byte[] salt = new byte[16];
-
         using (var rng = RandomNumberGenerator.Create())
         {
             rng.GetBytes(salt);
         }
-
         return salt;
     }
 
