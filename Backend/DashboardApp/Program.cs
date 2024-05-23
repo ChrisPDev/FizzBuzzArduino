@@ -8,6 +8,9 @@ namespace DashboardApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Try to revert a commit
+            int i = 0;
+
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
