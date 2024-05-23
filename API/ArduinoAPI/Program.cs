@@ -6,6 +6,8 @@ namespace ArduinoAPI
 {
     public class Program
     {
+        // Try to revert a commit
+        int i = 0;
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
